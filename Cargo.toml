@@ -11,19 +11,18 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # and limitations under the License.
-
 [package]
 name = "classgroup"
 version = "0.1.0"
 authors = ["Demi M. Obenour <demiobenour@gmail.com>"]
-keywords = ["class group"]
+description = """An implementation of class groups in Rust.  Uses GMP for arithmetic."""
+keywords = ["classgroup", "vdf"]
 repository = "https://github.com/poanetwork/vdf"
 license = "Apache-2.0"
 edition = "2018"
 
 [dependencies]
 num-traits = "0.2"
-rust-gmp = { git = "https://github.com/stichtingorganism/rust-gmp" }
 libc = "0.2"
 
 [dev-dependencies]
