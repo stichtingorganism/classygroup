@@ -14,11 +14,11 @@
 
 [package]
 name = "classygroup"
-version = "0.1.0"
+version = "0.0.1"
 authors = ["Demi M. Obenour <demiobenour@gmail.com>"]
 description = """An implementation of class groups in Rust.  Uses GMP for arithmetic."""
 keywords = ["classgroup", "vdf"]
-repository = "https://github.com/poanetwork/vdf"
+repository = "https://github.com/stichtingorganism/classygroup"
 license = "Apache-2.0"
 edition = "2018"
 
