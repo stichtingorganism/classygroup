@@ -15,6 +15,9 @@
 use num_traits::{One, Zero};
 use std::ops::{Mul, MulAssign, Rem, ShlAssign};
 
+mod create_discriminant;
+pub use self::create_discriminant::create_discriminant;
+
 pub mod gmp;
 
 pub mod gmp_classgroup;
@@ -177,8 +180,8 @@ mod test {
         path::PathBuf,
     };
 
-    use super::{gmp_classgroup::GmpClassGroup, ClassGroup};
     use super::gmp::mpz::Mpz;
+    use super::{gmp_classgroup::GmpClassGroup, ClassGroup};
 
     fn split_into_three_pieces(line: &str, c: char) -> [&str; 3] {
         let mut iter = line.split(c);

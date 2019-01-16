@@ -11,8 +11,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # and limitations under the License.
+
 [package]
-name = "classgroup"
+name = "classygroup"
 version = "0.1.0"
 authors = ["Demi M. Obenour <demiobenour@gmail.com>"]
 description = """An implementation of class groups in Rust.  Uses GMP for arithmetic."""
@@ -24,9 +25,13 @@ edition = "2018"
 [dependencies]
 num-traits = "0.2"
 libc = "0.2"
+blake2 = "0.8.0"
+
 
 [dev-dependencies]
 criterion = ">=0.2"
+sha2 = "0.8"
+
 
 [[bench]]
 name = "classgroup-bench"
