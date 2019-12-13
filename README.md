@@ -1,4 +1,4 @@
-# Class*y* Groups
+# Class*y* Group
 
 
 https://github.com/Chia-Network/vdf-competition/blob/master/classgroups.pdf
