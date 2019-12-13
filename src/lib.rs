@@ -26,6 +26,10 @@ pub use group::{
 mod num;
 pub use num::Mpz;
 
+pub mod uint;
+pub mod hash;
+
+
 // Get a tuple of mutable reference from a tuple.
 #[macro_export]
 macro_rules! mut_tuple_elems {
