@@ -1,10 +1,9 @@
-# Class Groups
+# Class*y* Groups
 
 
 https://github.com/Chia-Network/vdf-competition/blob/master/classgroups.pdf
 
-The Group of unknown order that is used to sample our primes
-RSA or Class groups of imaginary quadratic order
+The Group of unknown order that is used to sample our Class groups of imaginary quadratic order
 Binary quadratic forms 
 Class groups of binary quadratic forms omits the trusted setup that RSA needs.
 The order of the class group of a negative prime discriminant d, where |d| ≡ 3 mod 4, 
@@ -13,8 +12,3 @@ of the class group effectively unknown. Therefore, a suitable discriminant — a
 class group — can be chosen without the need for a trusted setup, which is a major advantage for 
 using class groups in applications requiring groups of unknown order.
 
-## The Setup for Accumulators
-
-1. Pick Common Reference String (CRS).
-2. Create a discriminant from CRS which is a negative prime number at chosen length (in bits).
-3. 
