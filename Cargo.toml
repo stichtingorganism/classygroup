@@ -14,7 +14,7 @@
 
 [package]
 name = "classygroup"
-version = "0.0.2"
+version = "0.0.3"
 authors = ["Stichting Organism"]
 description = "The Classy Group"
 keywords = ["classgroup"]
