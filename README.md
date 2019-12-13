@@ -12,3 +12,9 @@ is believed to be difficult to compute when |d| is sufficiently large, making th
 of the class group effectively unknown. Therefore, a suitable discriminant — and its associated 
 class group — can be chosen without the need for a trusted setup, which is a major advantage for 
 using class groups in applications requiring groups of unknown order.
+
+## The Setup for Accumulators
+
+1. Pick Common Reference String (CRS).
+2. Create a discriminant from CRS which is a negative prime number at chosen length (in bits).
+3. 

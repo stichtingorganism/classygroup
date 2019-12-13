@@ -1,66 +1,162 @@
-// Copyright 2018 POA Networks Ltd.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//   http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
+/// See https://bheisler.github.io/criterion.rs/book/getting_started.html to add more benchmarks.
 #[macro_use]
 extern crate criterion;
 
-use classgroup::{gmp_classgroup::GmpClassGroup, ClassGroup};
+
+use classygroup::{
+    Mpz,
+    ClassGroup,
+    ClassElem
+};
+
+
 use criterion::Criterion;
-use gmp::mpz::Mpz;
+use rug::Integer;
 use std::str::FromStr;
 
-fn bench_square(c: &mut Criterion) {
-    for _ in 0..2 {
-        let m_2048 = -Mpz::from_str(
-            "201493927071865251625903550712920535753645598483515670853547009\
-             878440933309489362800393797428711071833308081461824159206915864\
-             150805748296170245037221957772328044276705571745811271212292422\
-             075849739248257870371300001313586036515879618764093772248760562\
-             386804073478433157526816295216137723803793411828867470089409596\
-             238958950007370719325959579892866588928887249912429688364409867\
-             895510817680171869190054122881274299350947669820596157115994418\
-             034091728887584373727555384075665624624856766441009974642693066\
-             751400054217209981490667208950669417773785631693879782993019167\
-             69407006303085854796535778826115224633447713584423",
-        )
-        .unwrap();
-
-        let m_1024 = -Mpz::from_str(
-            "-11208471744389096429663063172516742066731683613191418514476174383781\
-             682509882427394963852743081347678693241523614532942268295868231081182\
-             819214054220080323345750407342623884342617809879459211722505867733607\
-             400509994975706778681543998242335468203860240586171413971485860382901\
-             6409314686266660248501773529803183",
-        )
-        .unwrap();
-        let group_1024 = GmpClassGroup::generator_for_discriminant(m_1024);
-        let group_2048 = GmpClassGroup::generator_for_discriminant(m_2048);
-        let (group_1024_clone, group_2048_clone) = (group_1024.clone(), group_2048.clone());
-        c.bench_function("square 1024", move |b| {
-            b.iter(|| group_1024_clone.clone().square())
-        });
-        c.bench_function("multiply 1024", move |b| {
-            b.iter(|| &group_1024 * &group_1024)
-        });
-        c.bench_function("square 2048", move |b| {
-            b.iter(|| group_2048_clone.clone().square())
-        });
-        c.bench_function("multiply 2048", move |b| {
-            b.iter(|| &group_2048 * &group_2048)
-        });
+// Syntactic sugar for cloning elements into closures.
+#[macro_export]
+macro_rules! enclose {
+  ( ($( $x:ident ),*) $y:expr ) => {
+    {
+      $(let $x = $x.clone();)*
+      $y
     }
+  };
 }
 
-criterion_group!(benches, bench_square);
+#[derive(Clone)]
+struct ClassBenchEnv {
+  op_l: ClassElem,
+  op_r: ClassElem,
+  exp_base: ClassElem,
+  exp: Integer,
+  elem_to_square: ClassElem,
+  elem_to_inv: ClassElem,
+  elem_to_reduce: (Mpz, Mpz, Mpz),
+  elem_to_normalize: (Mpz, Mpz, Mpz),
+}
+
+// Initialize all the elements we need here so that initialization logic
+// does not pollute the benchmarks.
+fn init_env() -> ClassBenchEnv {
+  let left = ClassGroup::elem((
+    Mpz::from_str("16").unwrap(),
+    Mpz::from_str("9").unwrap(),
+    Mpz::from_str(
+      "47837607866886756167333839869251273774207619337757918597995294777816250058331116325341018110\
+      672047217112377476473502060121352842575308793237621563947157630098485131517401073775191194319\
+      531549483898334742144138601661120476425524333273122132151927833887323969998955713328783526854\
+      198871332313399489386997681827578317938792170918711794684859311697439726596656501594138449739\
+      494228617068329664776714484742276158090583495714649193839084110987149118615158361352488488402\
+      038894799695420483272708933239751363849397287571692736881031223140446926522431859701738994562\
+      9057462766047140854869124473221137588347335081555186814036",
+    )
+    .unwrap(),
+  ));
+  let right = left.clone();
+
+  let base = ClassGroup::unknown_order_elem();
+  let exp = Integer::from_str(
+    "6531513683389606180955725446695124007119189061243576857500117325602044754680002922154438028",
+  )
+  .unwrap();
+
+  let aa = Mpz::from_str("16").unwrap();
+  let bb = Mpz::from_str("105").unwrap();
+  let cc = Mpz::from_str(
+    "47837607866886756167333839869251273774207619337757918597995294777816250058331116325341018110\
+     672047217112377476473502060121352842575308793237621563947157630098485131517401073775191194319\
+     531549483898334742144138601661120476425524333273122132151927833887323969998955713328783526854\
+     198871332313399489386997681827578317938792170918711794684859311697439726596656501594138449739\
+     494228617068329664776714484742276158090583495714649193839084110987149118615158361352488488402\
+     038894799695420483272708933239751363849397287571692736881031223140446926522431859701738994562\
+     9057462766047140854869124473221137588347335081555186814207",
+  )
+  .unwrap();
+
+  // Element which requires one iteration to reduce, represented as a tuple
+  // here, since only reduced representations of ClassElem are allowed.
+  let g_red = (cc.clone(), bb.clone(), aa.clone());
+  let g_norm = (aa, bb, cc);
+
+  ClassBenchEnv {
+    op_l: left,
+    op_r: right,
+    exp_base: base.clone(),
+    exp: exp,
+    elem_to_inv: base.clone(),
+    elem_to_square: ClassGroup::unknown_order_elem(),
+    elem_to_reduce: g_red,
+    elem_to_normalize: g_norm,
+  }
+}
+
+fn criterion_benchmark(c: &mut Criterion) {
+  let env = init_env();
+  c.bench_function(
+    "group_class_op",
+    enclose!(
+      (env) move |b| {
+        b.iter(|| ClassGroup::op(&env.op_l, &env.op_r))
+      }
+    ),
+  );
+
+  c.bench_function(
+    "group_class_exp",
+    enclose!(
+      (env) move |b| {
+        b.iter(|| ClassGroup::pow(&env.exp_base, &env.exp))
+      }
+    ),
+  );
+
+//   c.bench_function(
+//     "group_class_inv",
+//     enclose!(
+//       (env) move |b| {
+//         b.iter(|| ClassGroup::inv(&env.elem_to_inv))
+//       }
+//     ),
+//   );
+
+//   c.bench_function(
+//     "group_class_normalize",
+//     enclose!(
+//       (env) move |b| {
+//         b.iter_with_setup(
+//           || env.elem_to_normalize.clone(),
+//           |g| ClassGroup::normalize(g.0, g.1, g.2)
+//         )
+//       }
+//     ),
+//   );
+
+//   c.bench_function(
+//     "group_class_reduce",
+//     enclose!(
+//       (env) move |b| {
+//         b.iter_with_setup(
+//           || env.elem_to_reduce.clone(),
+//           |g| ClassGroup::reduce(g.0, g.1, g.2)
+//         )
+//       }
+//     ),
+//   );
+
+  c.bench_function(
+    "group_class_square",
+    enclose!(
+      (env) move |b| {
+        b.iter_with_setup(
+          || env.elem_to_square.clone(),
+          |mut g| ClassGroup::square(&mut g)
+        )
+      }
+    ),
+  );
+}
+
+criterion_group!(benches, criterion_benchmark);
 criterion_main!(benches);
