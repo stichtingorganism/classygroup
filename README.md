@@ -1,10 +1,7 @@
 # Class*y* Group
 
-
-https://github.com/Chia-Network/vdf-competition/blob/master/classgroups.pdf
-
 The Group of unknown order that is used to sample our Class groups of imaginary quadratic order
-Binary quadratic forms 
+
 Class groups of binary quadratic forms omits the trusted setup that RSA needs.
 The order of the class group of a negative prime discriminant d, where |d| ≡ 3 mod 4, 
 is believed to be difficult to compute when |d| is sufficiently large, making the order 
@@ -27,3 +24,6 @@ group_class_square      time:   [762.11 ns 775.93 ns 791.58 ns]
 Found 11 outliers among 100 measurements (11.00%)
   7 (7.00%) high mild
   4 (4.00%) high severe
+
+
+- https://github.com/Chia-Network/vdf-competition/blob/master/classgroups.pdf
