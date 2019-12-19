@@ -27,7 +27,9 @@ mod num;
 pub use num::Mpz;
 
 pub mod uint;
-pub mod hash;
+
+mod hash;
+pub use hash::hash_to_prime;
 
 
 // Get a tuple of mutable reference from a tuple.

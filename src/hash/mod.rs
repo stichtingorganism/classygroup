@@ -10,12 +10,6 @@ use mohan::hash::{
 };
 pub mod primality;
 
-
-/// Calls `hash` with Blake2b hasher.
-pub fn hash(t: &[u8]) -> H256 {
-  blake256(&t)
-}
-
 /// Hashes t with an incrementing counter (with blake2b) until a prime is found.
 pub fn hash_to_prime(t: &[u8]) -> Integer {
   let mut counter = 0_u64;
@@ -24,7 +18,7 @@ pub fn hash_to_prime(t: &[u8]) -> Integer {
     buf.extend_from_slice(t);
     buf.extend_from_slice(&counter.to_le_bytes());
 
-    let hash = hash(&buf);
+    let hash = blake256(&buf);
     let mut hash = hash.to_bytes();
     // Make the candidate prime odd. This gives ~7% performance gain on a 2018 Macbook Pro.
     hash[0] |= 1;
@@ -44,7 +38,7 @@ mod tests {
   #[test]
   fn test_blake2() {
     let data = b"martian cyborg gerbil attack";
-    hash(data);
+    blake256(data);
   }
 
   #[test]

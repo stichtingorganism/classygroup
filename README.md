@@ -25,5 +25,35 @@ Found 11 outliers among 100 measurements (11.00%)
   7 (7.00%) high mild
   4 (4.00%) high severe
 
+#
+
+group_class_op          time:   [1.5665 us 1.5763 us 1.5880 us]                            
+Found 6 outliers among 100 measurements (6.00%)
+  2 (2.00%) high mild
+  4 (4.00%) high severe
+
+Benchmarking group_class_exp: Warming up for 3.0000 s
+Warning: Unable to complete 100 samples in 5.0s. You may wish to increase target time to 70.6s or reduce sample count to 10
+group_class_exp         time:   [13.789 ms 13.830 ms 13.875 ms]                             
+Found 9 outliers among 100 measurements (9.00%)
+  3 (3.00%) high mild
+  6 (6.00%) high severe
+
+group_class_square      time:   [578.73 ns 582.13 ns 586.30 ns]                                
+Found 15 outliers among 100 measurements (15.00%)
+  3 (3.00%) low mild
+  5 (5.00%) high mild
+  7 (7.00%) high severe
+
+blake2                  time:   [121.22 ns 121.72 ns 122.33 ns]                   
+Found 11 outliers among 100 measurements (11.00%)
+  1 (1.00%) low severe
+  3 (3.00%) low mild
+  4 (4.00%) high mild
+  3 (3.00%) high severe
+
+hash_to_prime           time:   [303.36 us 306.26 us 309.21 us]                          
+Found 1 outliers among 100 measurements (1.00%)
+  1 (1.00%) high severe
 
 - https://github.com/Chia-Network/vdf-competition/blob/master/classgroups.pdf

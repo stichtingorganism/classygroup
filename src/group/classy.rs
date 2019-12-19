@@ -85,6 +85,7 @@ pub fn test_reduction(x: &mut ClassElem) -> bool {
 }
 
 impl ClassGroup {
+    
     fn discriminant(a: &Mpz, b: &Mpz, c: &Mpz) -> Mpz {
         with_ctx!(|ctx: &mut ClassCtx| {
             let (scratch,) = mut_tuple_elems!(ctx.op_ctx, 0);
@@ -552,6 +553,20 @@ impl ClassGroup {
         ret.c.sub_mut(&CLASS_GROUP_DISCRIMINANT);
         ret.c.fdiv_q_ui_mut(8);
 
+        Self::reduce(&mut ret);
+        ClassElem { a: ret.a, b: ret.b, c: ret.c }
+    }
+
+    /// The generator element
+    pub fn unknown_order_elem_disc(disc: &Mpz) -> ClassElem {
+        // Binary Quadratic Forms, Definition 5.4
+        let mut ret = ClassElem::default();
+        ret.a.set_ui(2);
+        ret.b.set_ui(1);
+        ret.c.set_ui(1);
+        ret.c.sub_mut(disc);
+        ret.c.fdiv_q_ui_mut(8);
+    
         Self::reduce(&mut ret);
         ClassElem { a: ret.a, b: ret.b, c: ret.c }
     }
