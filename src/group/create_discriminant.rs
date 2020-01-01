@@ -144,12 +144,12 @@ mod test {
 
     // }
 
-    #[test]
-    fn check_discriminant_length_mpz() {
-        //assert_eq!(create_discriminant(b"\xaa", 512).bit_length(), 512);
-        assert_eq!(create_discriminant(b"\xaa", 1024).bit_length(), 1024);
-        assert_eq!(create_discriminant(b"\xaa", 2048).bit_length(), 2048);
-    }
+    // #[test]
+    // fn check_discriminant_length_mpz() {
+    //     //assert_eq!(create_discriminant(b"\xaa", 512).bit_length(), 512);
+    //     assert_eq!(create_discriminant(b"\xaa", 1024).bit_length(), 1024);
+    //     assert_eq!(create_discriminant(b"\xaa", 2048).bit_length(), 2048);
+    // }
 
     // #[test]
     // fn check_discriminant_bytes_mpz_big() {

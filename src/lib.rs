@@ -13,15 +13,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#[macro_use] extern crate lazy_static;
-
+#[macro_use]
+extern crate lazy_static;
 
 mod group;
-pub use group::{
-  create_discriminant, 
-  ClassElem, 
-  ClassGroup
-};
+pub use group::{create_discriminant, ClassElem, ClassGroup};
 
 mod num;
 pub use num::Mpz;
@@ -30,7 +26,6 @@ pub mod uint;
 
 mod hash;
 pub use hash::hash_to_prime;
-
 
 // Get a tuple of mutable reference from a tuple.
 #[macro_export]

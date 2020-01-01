@@ -85,7 +85,6 @@ pub fn test_reduction(x: &mut ClassElem) -> bool {
 }
 
 impl ClassGroup {
-    
     fn discriminant(a: &Mpz, b: &Mpz, c: &Mpz) -> Mpz {
         with_ctx!(|ctx: &mut ClassCtx| {
             let (scratch,) = mut_tuple_elems!(ctx.op_ctx, 0);
@@ -426,6 +425,136 @@ impl ClassGroup {
         elem.c.set(&r);
     }
 
+    //WIP NUCOMP
+    pub fn nucomp(x: &ClassElem, y: &ClassElem) -> ClassElem {
+        //a1, a2, c2, ca, cb, cc, k, s, sp, ss, m, t, u2, v1, v2;
+        let mut unreduced = with_ctx!(|ctx: &mut ClassCtx| {
+            let (a1, a2, c2, mut co1, mut co2, m1, k, s, sp, ss, m, t, mut u2, v1, mut v2, mut temp) = mut_tuple_elems!(
+                ctx.op_ctx, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15
+            );
+
+            let L_sq_op = &mut ctx.L;
+
+            if x.a.cmp_mpz(&y.a) > 0 {
+                Self::nucomp(y, x);
+            } 
+            
+            /* nucomp calculation */
+            let mut ret = ClassElem::default();
+            //TODO: Remove these allocations
+            let mut r1 = Mpz::default();
+            let mut r2 = Mpz::default();
+            let mut m2 = Mpz::default();
+            // a1 = x.a;
+            // a2 = y.a;
+            // c2 = y.c;
+
+            ss.add(&x.a, &y.a);
+            ss.fdiv_q_ui_mut(2);
+
+            m.sub(&x.b, &y.b);
+            m.fdiv_q_ui_mut(2);
+
+            t.fdiv_r(&y.a, &x.a);
+
+            if t.is_zero() {
+                v1.set_ui(0);
+                sp.set(&x.a);
+            } else {
+                //gcdinv
+            }
+
+            k.mul(&m, &v1);
+            k.fdiv_r_mut(&a1);
+
+            if !sp.is_one() {
+                s.gcdext(&mut v2, &mut u2, &ss, &sp);
+                k.mul_mut(&u2);
+                t.mul(&v2, &c2);
+                k.sub_mut(&t);
+
+                if !s.is_one() {
+                    a1.fdiv_q_mut(&s);
+                    a2.fdiv_q_mut(&s);
+                    c2.mul_mut(&s);
+                }
+
+                k.fdiv_r_mut(&a1);
+            }
+
+            if a1.cmp_mpz(&L_sq_op) < 0 {
+                t.mul(&a2, &k);
+                ret.a.mul(&a2, &a1);
+
+                ret.b.mul_ui(&t, 2);
+                ret.b.add_mut(&y.b);
+
+                ret.c.add(&y.b, &t);
+                ret.c.mul_mut(&k);
+                ret.c.add_mut(&c2);
+                
+                ret.c.fdiv_q_mut(&a1);
+            } else {
+                // fmpz_t m1, m2, r1, r2, co1, co2, temp;
+                // fmpz_set(r2, a1);
+                // fmpz_set(r1, k);
+          
+                // Lehmer partial extended GCD.
+                ctx.partial_context.xgcd_partial(
+                    &mut co2,
+                    &mut co1,
+                    &mut r2,
+                    &mut r1,
+                    &L_sq_op,
+                ); //L should be const
+
+                t.mul(&a2, &r1);
+                m1.mul(&m, &co1);
+                m1.add_mut(&t);
+                m1.tdiv_q_mut(&a1);
+
+                m2.mul(&ss, &r1);
+                temp.mul(&c2, &co1);
+                m2.sub_mut(&temp);
+                m2.tdiv_q_mut(&a1);
+
+                ret.a.mul(&r1, &m1);
+                temp.mul(&co1, &m2);
+
+                if co1.sgn() < 0 {
+                    ret.a.sub_mut(&temp); //could be sub other way around
+                } else {
+                    ret.a.sub_mut(&temp);//could be sub other way around
+                }
+                
+                ret.b.mul(&ret.a, &co2);
+                ret.b.sub_mut(&t); //could be sub other way around
+                ret.b.mul_ui_mut(2);
+                ret.b.fdiv_q_mut(&co1);
+                ret.b.sub_mut(&y.b);
+
+                temp.mul_ui(&ret.a, 2);
+                ret.b.fdiv_r_mut(&temp);
+
+                ret.c.mul(&ret.b, &ret.b);
+                ret.c.sub_mut(&ctx.D);
+                ret.c.fdiv_q_mut(&ret.a);
+                ret.c.fdiv_q_ui_mut(2);
+
+                if ret.a.sgn() < 0 {
+                    ret.a.neg_mut();
+                    ret.c.neg_mut();
+                }
+
+            }
+
+            ret
+        });
+
+        Self::reduce_mut(&mut unreduced);
+        unreduced
+    }
+
     pub fn op(x: &ClassElem, y: &ClassElem) -> ClassElem {
         let mut unreduced = with_ctx!(|ctx: &mut ClassCtx| {
             let (g, h, j, w, r, s, t, u, a, b, l, m, mut mu, mut v, mut lambda, mut sigma, k) = mut_tuple_elems!(
@@ -534,11 +663,12 @@ impl ClassGroup {
             if n == Integer::from(0) {
                 return val;
             }
+
             if n.is_odd() {
                 val = Self::op(&val, &a);
             }
 
-            ClassGroup::square(&mut a);
+            Self::square(&mut a);
             n >>= 1;
         }
     }
@@ -554,7 +684,11 @@ impl ClassGroup {
         ret.c.fdiv_q_ui_mut(8);
 
         Self::reduce(&mut ret);
-        ClassElem { a: ret.a, b: ret.b, c: ret.c }
+        ClassElem {
+            a: ret.a,
+            b: ret.b,
+            c: ret.c,
+        }
     }
 
     /// The generator element
@@ -566,9 +700,13 @@ impl ClassGroup {
         ret.c.set_ui(1);
         ret.c.sub_mut(disc);
         ret.c.fdiv_q_ui_mut(8);
-    
+
         Self::reduce(&mut ret);
-        ClassElem { a: ret.a, b: ret.b, c: ret.c }
+        ClassElem {
+            a: ret.a,
+            b: ret.b,
+            c: ret.c,
+        }
     }
 
     fn validate(a: &Mpz, b: &Mpz, c: &Mpz) -> bool {
@@ -581,18 +719,22 @@ impl ClassGroup {
     }
 
     pub fn elem(abc: (Mpz, Mpz, Mpz)) -> ClassElem {
-        let mut el = ClassElem { a: abc.0, b: abc.1, c: abc.2 };
+        let mut el = ClassElem {
+            a: abc.0,
+            b: abc.1,
+            c: abc.2,
+        };
         ClassGroup::reduce(&mut el);
-    
+
         // Ideally, this should return an error and the
         // return type of ElemFrom should be Result<Self::Elem, Self:err>,
         // but this would require a lot of ugly "unwraps" in the accumulator
         // library. Besides, users should not need to create new class group
         // elements, so an invalid ElemFrom here should signal a severe internal error.
         assert!(ClassGroup::validate(&el.a, &el.b, &el.c));
-    
+
         el
-      }
+    }
 }
 
 //  Caveat: tests that use "ground truth" use outputs from
@@ -704,9 +846,7 @@ mod tests {
         assert!(reduced_ground_truth != diff_elem);
 
         ClassGroup::reduce(&mut not_reduced);
-        assert!(
-            not_reduced == reduced_ground_truth
-        );
+        assert!(not_reduced == reduced_ground_truth);
     }
 
     #[test]
@@ -810,10 +950,7 @@ mod tests {
 
         assert_ne!(to_reduce, reduced_ground_truth);
         ClassGroup::reduce(&mut to_reduce);
-        assert_eq!(
-            to_reduce,
-            reduced_ground_truth
-        );
+        assert_eq!(to_reduce, reduced_ground_truth);
     }
 
     #[test]

@@ -58,6 +58,9 @@ impl Default for OpCtx {
 pub struct ClassCtx {
     pub L: Mpz,
 
+    // Discrimenant
+    pub D: Mpz,
+
     // Context for general class group ops implemented in mod.rs
     pub op_ctx: OpCtx,
 
@@ -72,6 +75,7 @@ impl ClassCtx {
     fn from_discriminant(disc: &Mpz) -> Self {
         let mut s = Self {
             L: Mpz::default(),
+            D: disc.clone(),
             op_ctx: OpCtx::default(),
             lin_cong_ctx: LinCongruenceCtx::default(),
             partial_context: Default::default(),
@@ -88,6 +92,7 @@ impl Default for ClassCtx {
     fn default() -> Self {
         let mut s = Self {
             L: Mpz::default(),
+            D: CLASS_GROUP_DISCRIMINANT.clone(),
             op_ctx: OpCtx::default(),
             lin_cong_ctx: LinCongruenceCtx::default(),
             partial_context: Default::default(),

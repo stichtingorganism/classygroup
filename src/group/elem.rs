@@ -10,6 +10,15 @@ pub struct ClassElem {
     pub c: Mpz,
 }
 
+impl ClassElem {
+    fn to_bytes(&self) -> Vec<u8> {
+        let mut buf = Vec::new();
+        // buf.extend_from_slice();
+        // buf.extend_from_slice();
+        buf
+    }
+}
+
 impl Default for ClassElem {
     fn default() -> Self {
         ClassElem {

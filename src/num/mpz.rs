@@ -8,6 +8,7 @@ use std::mem::uninitialized;
 use std::os::raw::{c_int, c_ulong};
 use std::slice;
 use std::str::FromStr;
+use std::ffi::c_void;
 
 #[derive(Debug)]
 #[cfg_attr(repr_transparent, repr(transparent))]
@@ -198,6 +199,11 @@ impl Mpz {
     }
 
     #[inline]
+    pub fn fdiv_r_mut(&mut self, x: &Mpz) {
+        unsafe { gmp::mpz_fdiv_r(&mut self.inner, &self.inner, &x.inner) }
+    }
+
+    #[inline]
     pub fn fdiv_qr(&mut self, r: &mut Mpz, x: &Mpz, y: &Mpz) {
         unsafe { gmp::mpz_fdiv_qr(&mut self.inner, &mut r.inner, &x.inner, &y.inner) }
     }
@@ -214,6 +220,11 @@ impl Mpz {
         unsafe {
             gmp::mpz_fdiv_q_ui(&mut self.inner, &self.inner, val);
         }
+    }
+
+    #[inline]
+    pub fn tdiv_q_mut(&mut self, x: &Mpz) {
+        unsafe { gmp::mpz_tdiv_q(&mut self.inner, &self.inner, &x.inner) }
     }
 
     #[inline]
@@ -385,6 +396,13 @@ impl Mpz {
     }
 
     #[inline]
+    pub fn is_one(&self) -> bool {
+        let mut one = Mpz::default();
+        one.set_ui(1);
+        self == &one
+    }
+
+    #[inline]
     pub fn div_floor(&mut self, numerator: &Mpz, denom: &Mpz) {
         unsafe {
             if denom.is_zero() {
@@ -462,6 +480,14 @@ impl Mpz {
     }
 }
 
+/// Flint Port:
+/// Given integers f, g with 0 ≤ f < g, computes the greatest common 
+/// divisor d = gcd(f, g) and the modular inverse a = f−1 (mod g), whenever f ̸= 0.
+/// Assumes that d and a are not aliased.
+pub fn fmpz_gcdinv(d: &mut Mpz, a: &mut Mpz, f: &Mpz, g: &Mpz) {
+    
+}
+
 /// The result of running probab_prime
 #[derive(PartialEq)]
 pub enum ProbabPrimeResult {
@@ -470,24 +496,123 @@ pub enum ProbabPrimeResult {
     Prime,
 }
 
+// /// Helper function to import Mpz from raw network bytes
+// fn raw_import(buf: &[u8]) -> Mpz {
+//     let mut obj = Mpz::default();
+
+//     unsafe {
+//         gmp::mpz_import(
+//             &mut obj.inner,
+//             buf.len(),
+//             1,
+//             1,
+//             1,
+//             0,
+//             buf.as_ptr() as *const _,
+//         )
+//     }
+//     obj
+// }
+
+
+/// Returns `true` if `z` is negative and not zero.  Otherwise,
+/// returns `false`.
+#[inline]
+pub fn mpz_is_negative(z: &Mpz) -> bool {
+    if z.sgn() < 0 {
+        true
+    } else {
+        false
+    }
+    //unsafe { (*(z as *const _ as *const MpzStruct)).mp_size < 0 }
+}
+
+/// Given integers f, g with 0 ≤ f < g, computes the greatest common divisor 
+/// d = gcd(f, g) and the modular inverse a = f−1 (mod g), whenever f ̸= 0.
+/// Assumes that d and a are not aliased.
+#[inline]
+pub fn mpz_gcdinv(d: &mut Mpz, a: &mut Mpz, f: &Mpz, g: &Mpz) {
+   
+}
+
+
 fn raw_import(buf: &[u8]) -> Mpz {
     let mut obj = Mpz::default();
 
-    unsafe {
+    unsafe { 
         gmp::mpz_import(
-            &mut obj.inner,
-            buf.len(),
-            1,
-            1,
-            1,
-            0,
-            buf.as_ptr() as *const _,
-        )
+            &mut obj.inner, 
+            buf.len(), 
+            1, 
+            1, 
+            1, 
+            0, 
+            buf.as_ptr() as *const _
+        ) 
     }
     obj
 }
+
+
+/// Helper function to export Mpz to raw network bytes
+fn raw_export(raw: &Mpz) -> Vec<u8> {
+    //let mut buf = Vec::<u8>::with_capacity(raw.bit_length());
+    let mut buf = Vec::new();
+
+    unsafe {
+        let buf_ptr = buf.as_mut_ptr();
+        let mut count = std::mem::MaybeUninit::uninit();
+        let count_ptr = count.as_mut_ptr();
+
+        let ptr2 = gmp::mpz_export(
+            buf_ptr as *mut c_void,
+            count_ptr,
+            1, //countp
+            1, //size
+            1, //endian
+            0, //nails
+            &raw.inner
+        );
+        //assert_eq!(buf_ptr, ptr2);
+    }
+
+    println!("exbuf: {:?}", buf);
+    buf
+}
+
+// pub fn raw_export(raw: &Mpz) -> Vec<u8> {
+//     let mut buf = Vec::new();
+//     let res = export_obj(raw, &mut buf);
+//     //assert!(res.is_ok());
+//     println!("exbufs: {:?}", res);
+//     // println!("exbuf: {:?}", buf);
+//     buf
+// }
+
+
 
 // fn check_rem() {
 //     	        assert_eq!(mpz_crem_u16(&(-100i64).into(), 3), 1);
 //     	        assert_eq!(mpz_crem_u16(&(100i64).into(), 3), 2);
 //     	    }
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_import_export() {
+        // let mut obj = Mpz::default();
+        // let ex = raw_export(&obj);
+        // let im = raw_import(&ex);
+        // assert_eq!(im, obj);
+
+        // let mut obj = Mpz::default();
+        // obj.set_ui(55);
+        // println!("ex: {:?}", obj);
+        // let ex = raw_export(&obj);
+        // println!("ex2: {:?}", ex);
+        // let im = raw_import(&ex);
+        // assert_eq!(im, obj);
+    }
+}

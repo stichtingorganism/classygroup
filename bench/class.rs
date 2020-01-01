@@ -2,13 +2,7 @@
 #[macro_use]
 extern crate criterion;
 
-
-use classygroup::{
-    Mpz,
-    ClassGroup,
-    ClassElem
-};
-
+use classygroup::{ClassElem, ClassGroup, Mpz};
 
 use criterion::Criterion;
 use rug::Integer;
@@ -27,20 +21,20 @@ macro_rules! enclose {
 
 #[derive(Clone)]
 struct ClassBenchEnv {
-  op_l: ClassElem,
-  op_r: ClassElem,
-  exp_base: ClassElem,
-  exp: Integer,
-  elem_to_square: ClassElem,
-  elem_to_inv: ClassElem,
-  elem_to_reduce: (Mpz, Mpz, Mpz),
-  elem_to_normalize: (Mpz, Mpz, Mpz),
+    op_l: ClassElem,
+    op_r: ClassElem,
+    exp_base: ClassElem,
+    exp: Integer,
+    elem_to_square: ClassElem,
+    elem_to_inv: ClassElem,
+    elem_to_reduce: (Mpz, Mpz, Mpz),
+    elem_to_normalize: (Mpz, Mpz, Mpz),
 }
 
 // Initialize all the elements we need here so that initialization logic
 // does not pollute the benchmarks.
 fn init_env() -> ClassBenchEnv {
-  let left = ClassGroup::elem((
+    let left = ClassGroup::elem((
     Mpz::from_str("16").unwrap(),
     Mpz::from_str("9").unwrap(),
     Mpz::from_str(
@@ -54,17 +48,17 @@ fn init_env() -> ClassBenchEnv {
     )
     .unwrap(),
   ));
-  let right = left.clone();
+    let right = left.clone();
 
-  let base = ClassGroup::unknown_order_elem();
-  let exp = Integer::from_str(
+    let base = ClassGroup::unknown_order_elem();
+    let exp = Integer::from_str(
     "6531513683389606180955725446695124007119189061243576857500117325602044754680002922154438028",
   )
   .unwrap();
 
-  let aa = Mpz::from_str("16").unwrap();
-  let bb = Mpz::from_str("105").unwrap();
-  let cc = Mpz::from_str(
+    let aa = Mpz::from_str("16").unwrap();
+    let bb = Mpz::from_str("105").unwrap();
+    let cc = Mpz::from_str(
     "47837607866886756167333839869251273774207619337757918597995294777816250058331116325341018110\
      672047217112377476473502060121352842575308793237621563947157630098485131517401073775191194319\
      531549483898334742144138601661120476425524333273122132151927833887323969998955713328783526854\
@@ -75,87 +69,87 @@ fn init_env() -> ClassBenchEnv {
   )
   .unwrap();
 
-  // Element which requires one iteration to reduce, represented as a tuple
-  // here, since only reduced representations of ClassElem are allowed.
-  let g_red = (cc.clone(), bb.clone(), aa.clone());
-  let g_norm = (aa, bb, cc);
+    // Element which requires one iteration to reduce, represented as a tuple
+    // here, since only reduced representations of ClassElem are allowed.
+    let g_red = (cc.clone(), bb.clone(), aa.clone());
+    let g_norm = (aa, bb, cc);
 
-  ClassBenchEnv {
-    op_l: left,
-    op_r: right,
-    exp_base: base.clone(),
-    exp: exp,
-    elem_to_inv: base.clone(),
-    elem_to_square: ClassGroup::unknown_order_elem(),
-    elem_to_reduce: g_red,
-    elem_to_normalize: g_norm,
-  }
+    ClassBenchEnv {
+        op_l: left,
+        op_r: right,
+        exp_base: base.clone(),
+        exp: exp,
+        elem_to_inv: base.clone(),
+        elem_to_square: ClassGroup::unknown_order_elem(),
+        elem_to_reduce: g_red,
+        elem_to_normalize: g_norm,
+    }
 }
 
 fn criterion_benchmark(c: &mut Criterion) {
-  let env = init_env();
-  c.bench_function(
-    "group_class_op",
-    enclose!(
-      (env) move |b| {
-        b.iter(|| ClassGroup::op(&env.op_l, &env.op_r))
-      }
-    ),
-  );
+    let env = init_env();
+    c.bench_function(
+        "group_class_op",
+        enclose!(
+          (env) move |b| {
+            b.iter(|| ClassGroup::op(&env.op_l, &env.op_r))
+          }
+        ),
+    );
 
-  c.bench_function(
-    "group_class_exp",
-    enclose!(
-      (env) move |b| {
-        b.iter(|| ClassGroup::pow(&env.exp_base, &env.exp))
-      }
-    ),
-  );
+    c.bench_function(
+        "group_class_exp",
+        enclose!(
+          (env) move |b| {
+            b.iter(|| ClassGroup::pow(&env.exp_base, &env.exp))
+          }
+        ),
+    );
 
-//   c.bench_function(
-//     "group_class_inv",
-//     enclose!(
-//       (env) move |b| {
-//         b.iter(|| ClassGroup::inv(&env.elem_to_inv))
-//       }
-//     ),
-//   );
+    //   c.bench_function(
+    //     "group_class_inv",
+    //     enclose!(
+    //       (env) move |b| {
+    //         b.iter(|| ClassGroup::inv(&env.elem_to_inv))
+    //       }
+    //     ),
+    //   );
 
-//   c.bench_function(
-//     "group_class_normalize",
-//     enclose!(
-//       (env) move |b| {
-//         b.iter_with_setup(
-//           || env.elem_to_normalize.clone(),
-//           |g| ClassGroup::normalize(g.0, g.1, g.2)
-//         )
-//       }
-//     ),
-//   );
+    //   c.bench_function(
+    //     "group_class_normalize",
+    //     enclose!(
+    //       (env) move |b| {
+    //         b.iter_with_setup(
+    //           || env.elem_to_normalize.clone(),
+    //           |g| ClassGroup::normalize(g.0, g.1, g.2)
+    //         )
+    //       }
+    //     ),
+    //   );
 
-//   c.bench_function(
-//     "group_class_reduce",
-//     enclose!(
-//       (env) move |b| {
-//         b.iter_with_setup(
-//           || env.elem_to_reduce.clone(),
-//           |g| ClassGroup::reduce(g.0, g.1, g.2)
-//         )
-//       }
-//     ),
-//   );
+    //   c.bench_function(
+    //     "group_class_reduce",
+    //     enclose!(
+    //       (env) move |b| {
+    //         b.iter_with_setup(
+    //           || env.elem_to_reduce.clone(),
+    //           |g| ClassGroup::reduce(g.0, g.1, g.2)
+    //         )
+    //       }
+    //     ),
+    //   );
 
-  c.bench_function(
-    "group_class_square",
-    enclose!(
-      (env) move |b| {
-        b.iter_with_setup(
-          || env.elem_to_square.clone(),
-          |mut g| ClassGroup::square(&mut g)
-        )
-      }
-    ),
-  );
+    c.bench_function(
+        "group_class_square",
+        enclose!(
+          (env) move |b| {
+            b.iter_with_setup(
+              || env.elem_to_square.clone(),
+              |mut g| ClassGroup::square(&mut g)
+            )
+          }
+        ),
+    );
 }
 
 criterion_group!(benches, criterion_benchmark);
